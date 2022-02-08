@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import useWIndowDimensions from './hooks/useWIndowDimensions'
 import oscillators from './utils/oscillators'
 import { FaPlay, FaStop, FaUndo } from 'react-icons/fa'
 import RangeSlider from './components/rangeSlider'
 
 import './App.css'
 
-const numRows = 30
-const numCols = 50
 const positions = [
   [0, 1],
   [0, -1],
@@ -18,32 +17,43 @@ const positions = [
   [-1, 0],
 ]
 
-const generateEmptyGrid = () => {
-  const grid = []
-  for (let i = 0; i < numRows; i++) {
-    grid.push(Array.from(Array(numCols), () => 0))
-  }
-  return grid
-}
-
-const generateRandomGrid = () => {
-  const grid = []
-  for (let i = 0; i < numRows; i++) {
-    grid.push(Array.from(Array(numCols), () => Math.floor(Math.random() * 2)))
-  }
-  return grid
-}
-
 const App = () => {
-  const [grid, setGrid] = useState(() => {
-    return generateRandomGrid()
-  })
+  const { height, width } = useWIndowDimensions()
+  let numRows = 30
+  // let numRows = height / 20 > 30 ? 30 : Math.floor(height / 20) - 2
+  console.log({ numRows })
+  let numCols = width / 20 > 50 ? 50 : Math.floor(width / 20) - 2
+
+  const [grid, setGrid] = useState([])
   const [speed, setSpeed] = useState(300)
   const [currentlyAlive, setCurrentlyAlive] = useState(0)
   const [type, setType] = useState('random')
   const [running, setRunning] = useState(false)
   const runningRef = useRef(running)
   runningRef.current = running
+  const generateEmptyGrid = () => {
+    const grid = []
+    for (let i = 0; i < numRows; i++) {
+      grid.push(Array.from(Array(numCols), () => 0))
+    }
+    return grid
+  }
+
+  const generateRandomGrid = () => {
+    const grid = []
+    for (let i = 0; i < numRows; i++) {
+      grid.push(Array.from(Array(numCols), () => Math.floor(Math.random() * 2)))
+    }
+    return grid
+  }
+
+  useEffect(() => {
+    setGrid(generateRandomGrid())
+  }, [])
+
+  useEffect(() => {
+    setGrid(generateRandomGrid())
+  }, [numCols, numRows])
 
   useEffect(() => {
     setCurrentlyAlive(countAlive())
@@ -175,11 +185,12 @@ const App = () => {
               <option value="oscillators">Oscillators</option>
             </select>
           </div>
-          <RangeSlider {...sliderProps} classes="" />
         </div>
+        <RangeSlider {...sliderProps} classes="" />
         <div className="alive">{currentlyAlive}</div>
       </nav>
       <div
+        className="grid"
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${numCols}, 20px)`,
